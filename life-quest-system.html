@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Quest System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0e17;
+            --bg-panel: #131820;
+            --bg-card: #1a1f2e;
+            --accent-primary: #00d4ff;
+            --accent-secondary: #7c3aed;
+            --accent-gold: #ffd700;
+            --text-primary: #e8eef5;
+            --text-secondary: #9ca3af;
+            --success: #10b981;
+            --danger: #ef4444;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(124, 58, 237, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .header h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.3)); }
+            50% { filter: drop-shadow(0 0 30px rgba(124, 58, 237, 0.5)); }
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 2rem;
+            height: fit-content;
+        }
+
+        .player-level {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .level-display {
+            font-family: 'Cinzel', serif;
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .level-label {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .xp-bar {
+            margin-top: 1.5rem;
+        }
+
+        .xp-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .xp-progress {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .xp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 6px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .stat-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-name {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        .stat-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .stat-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .quests-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .work-schedule-banner {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(0, 212, 255, 0.2));
+            border: 1px solid var(--accent-primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: none;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .work-schedule-banner.active {
+            display: flex;
+        }
+
+        .work-icon {
+            font-size: 2rem;
+        }
+
+        .work-schedule-input {
+            margin-bottom: 1.5rem;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .input-field {
+            flex: 1;
+        }
+
+        .input-field label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .input-field input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Exo 2', sans-serif;
+            font-size: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-clear {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--danger);
+        }
+
+        .btn-clear:hover {
+            background: var(--danger);
+            box-shadow: 0 5px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .quest-category {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .category-icon {
+            font-size: 1.5rem;
+        }
+
+        .category-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .category-progress {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .quest-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .quest-item:hover {
+            border-color: var(--accent-primary);
+            transform: translateX(5px);
+        }
+
+        .quest-item.completed {
+            opacity: 0.6;
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success);
+        }
+
+        .quest-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .quest-item.completed .quest-checkbox {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .quest-checkbox::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .quest-item.completed .quest-checkbox::after {
+            opacity: 1;
+        }
+
+        .quest-content {
+            flex: 1;
+        }
+
+        .quest-name {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .quest-time {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .quest-xp {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--accent-primary);
+            border-radius: 6px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .streak-display {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .streak-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .streak-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 0.5rem;
+        }
+
+        .daily-summary {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .summary-stat {
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .summary-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-panel {
+                position: relative;
+                top: 0;
+            }
+        }
+
+        .level-up-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: var(--bg-panel);
+            border: 2px solid var(--accent-gold);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            animation: levelUpAppear 0.5s ease forwards;
+        }
+
+        @keyframes levelUpAppear {
+            to {
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .level-up-notification h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 2.5rem;
+            color: var(--accent-gold);
+            margin-bottom: 1rem;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .disabled-quest {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Life Quest System</h1>
+            <p class="subtitle">Rise Through Consistency</p>
+            <button class="btn" id="enableNotifications" onclick="requestNotificationPermission()" style="margin-top: 1rem;">
+                🔔 Enable Quest Reminders
+            </button>
+        </div>
+
+        <div class="work-schedule-input">
+            <div class="input-group">
+                <div class="input-field">
+                    <label>Work Start Time</label>
+                    <input type="time" id="workStart" />
+                </div>
+                <div class="input-field">
+                    <label>Work End Time</label>
+                    <input type="time" id="workEnd" />
+                </div>
+                <button class="btn" onclick="setWorkSchedule()">Set Work Schedule</button>
+                <button class="btn btn-clear" onclick="clearWorkSchedule()">Clear</button>
+            </div>
+        </div>
+
+        <div class="work-schedule-banner" id="workBanner">
+            <span class="work-icon">💼</span>
+            <div>
+                <strong>Work Mode Active</strong>
+                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                    Some quests are disabled during work hours
+                </p>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="stats-panel">
+                <div class="player-level">
+                    <div class="level-display" id="playerLevel">1</div>
+                    <div class="level-label">Hunter Level</div>
+                    <div class="xp-bar">
+                        <div class="xp-label">
+                            <span>XP</span>
+                            <span id="xpText">0 / 100</span>
+                        </div>
+                        <div class="xp-progress">
+                            <div class="xp-fill" id="xpFill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-name">
+                        <span>💪 Strength</span>
+                        <span class="stat-value" id="strengthValue">0</span>
+                    </div>
+                    <div class="stat-bar">
+                        <div class="stat-fill" id="strengthBar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-name">
+                        <span>❤️ Vitality</span>
+                        <span class="stat-value" id="vitalityValue">0</span>
+                    </div>
+                    <div class="stat-bar">
+                        <div class="stat-fill" id="vitalityBar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-name">
+                        <span>🧠 Intelligence</span>
+                        <span class="stat-value" id="intelligenceValue">0</span>
+                    </div>
+                    <div class="stat-bar">
+                        <div class="stat-fill" id="intelligenceBar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-name">
+                        <span>☯️ Balance</span>
+                        <span class="stat-value" id="balanceValue">0</span>
+                    </div>
+                    <div class="stat-bar">
+                        <div class="stat-fill" id="balanceBar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="streak-display">
+                    <div class="streak-number" id="streakNumber">0</div>
+                    <div class="streak-label">Day Streak 🔥</div>
+                </div>
+            </div>
+
+            <div class="quests-section" id="questsContainer">
+                <!-- Quests will be generated here -->
+            </div>
+        </div>
+
+        <div class="daily-summary">
+            <div class="summary-stat">
+                <div class="summary-value" id="completedToday">0</div>
+                <div class="summary-label">Quests Completed Today</div>
+            </div>
+            <div class="summary-stat">
+                <div class="summary-value" id="totalXpToday">0</div>
+                <div class="summary-label">Total XP Earned</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameState = {
+            level: 1,
+            xp: 0,
+            xpToNextLevel: 100,
+            stats: {
+                strength: 0,
+                vitality: 0,
+                intelligence: 0,
+                balance: 0
+            },
+            streak: 0,
+            lastCompletionDate: null,
+            completedQuests: [],
+            workSchedule: null,
+            notificationsEnabled: false,
+            notifiedQuests: [] // Track which quests we've already notified about today
+        };
+
+        // Request notification permission
+        async function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    gameState.notificationsEnabled = true;
+                    saveGameState();
+                    showNotification('Notifications Enabled', 'You\'ll receive reminders for your daily quests!');
+                }
+            }
+        }
+
+        // Show browser notification
+        function showNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: body,
+                    icon: '🎯',
+                    badge: '🎯',
+                    tag: 'life-quest-system'
+                });
+            }
+        }
+
+        // Check if it's time for quest notifications
+        function checkQuestNotifications() {
+            if (!gameState.notificationsEnabled || Notification.permission !== 'granted') {
+                return;
+            }
+
+            const now = new Date();
+            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const today = now.toDateString();
+
+            // Reset notified quests at midnight
+            if (gameState.lastNotificationDate !== today) {
+                gameState.notifiedQuests = [];
+                gameState.lastNotificationDate = today;
+                saveGameState();
+            }
+
+            questCategories.forEach(category => {
+                category.quests.forEach(quest => {
+                    // Skip if already completed or already notified
+                    if (gameState.completedQuests.includes(quest.id) || 
+                        gameState.notifiedQuests.includes(quest.id)) {
+                        return;
+                    }
+
+                    // Check if quest has a specific time
+                    if (quest.time && quest.time.includes(':')) {
+                        if (quest.time === currentTime) {
+                            showNotification(
+                                `⏰ Quest Ready: ${quest.name}`,
+                                `Time to ${quest.name.toLowerCase()}! Earn +${quest.xp} XP`
+                            );
+                            gameState.notifiedQuests.push(quest.id);
+                            saveGameState();
+                        }
+                    }
+                });
+            });
+        }
+
+        // Quest definitions
+        const questCategories = [
+            {
+                name: "Morning Routine",
+                icon: "🌅",
+                quests: [
+                    { id: "wake-up", name: "Wake up at 8:30 AM", time: "08:30", xp: 10, stats: ["vitality"], workBlocked: false },
+                    { id: "morning-hydration", name: "Drink water (500ml)", time: "08:45", xp: 5, stats: ["vitality"], workBlocked: false },
+                    { id: "morning-meditation", name: "Morning meditation", time: "09:00", xp: 15, stats: ["balance"], workBlocked: false }
+                ]
+            },
+            {
+                name: "Fitness & Health",
+                icon: "💪",
+                quests: [
+                    { id: "workout-1", name: "First workout session (30min)", time: "10:00", xp: 25, stats: ["strength", "vitality"], workBlocked: true },
+                    { id: "workout-2", name: "Second workout session (30min)", time: "18:00", xp: 25, stats: ["strength", "vitality"], workBlocked: true },
+                    { id: "yoga", name: "Yoga practice", time: "20:00", xp: 20, stats: ["balance", "strength"], workBlocked: true }
+                ]
+            },
+            {
+                name: "Nutrition",
+                icon: "🍽️",
+                quests: [
+                    { id: "breakfast", name: "Healthy breakfast", time: "09:30", xp: 15, stats: ["vitality"], workBlocked: false },
+                    { id: "lunch", name: "Nutritious lunch", time: "13:00", xp: 15, stats: ["vitality"], workBlocked: false },
+                    { id: "dinner", name: "Balanced dinner", time: "19:00", xp: 15, stats: ["vitality"], workBlocked: false },
+                    { id: "hydration", name: "Daily water intake (2L)", time: "All day", xp: 10, stats: ["vitality"], workBlocked: false }
+                ]
+            },
+            {
+                name: "Productivity & Growth",
+                icon: "📚",
+                quests: [
+                    { id: "focused-work", name: "Focused work session", time: "Work hours", xp: 20, stats: ["intelligence"], workBlocked: false },
+                    { id: "learning", name: "Learning/skill development (30min)", time: "17:00", xp: 25, stats: ["intelligence"], workBlocked: true },
+                    { id: "creative-hobby", name: "Creative hobby time", time: "20:30", xp: 20, stats: ["intelligence", "balance"], workBlocked: true }
+                ]
+            },
+            {
+                name: "Environment",
+                icon: "✨",
+                quests: [
+                    { id: "tidy-space", name: "Tidy workspace/living area", time: "21:00", xp: 15, stats: ["balance"], workBlocked: true },
+                    { id: "deep-clean", name: "Deep clean one area", time: "Flexible", xp: 10, stats: ["balance"], workBlocked: true }
+                ]
+            },
+            {
+                name: "Evening Routine",
+                icon: "🌙",
+                quests: [
+                    { id: "evening-reflection", name: "Daily reflection/journaling", time: "22:00", xp: 15, stats: ["intelligence", "balance"], workBlocked: false },
+                    { id: "screen-off", name: "Screen-free time (1hr before bed)", time: "22:59", xp: 10, stats: ["balance"], workBlocked: false },
+                    { id: "sleep", name: "Sleep by 11:59 PM", time: "23:59", xp: 20, stats: ["vitality", "balance"], workBlocked: false }
+                ]
+            }
+        ];
+
+        // Load saved state
+        function loadGameState() {
+            const saved = localStorage.getItem('lifeQuestSystem');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                gameState = { ...gameState, ...parsed };
+                
+                // Check if it's a new day
+                const today = new Date().toDateString();
+                if (gameState.lastCompletionDate !== today) {
+                    // Reset daily quests
+                    gameState.completedQuests = [];
+                    
+                    // Check streak
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    if (gameState.lastCompletionDate !== yesterday.toDateString()) {
+                        gameState.streak = 0;
+                    }
+                }
+            }
+            updateUI();
+        }
+
+        // Save game state
+        function saveGameState() {
+            localStorage.setItem('lifeQuestSystem', JSON.stringify(gameState));
+        }
+
+        // Set work schedule
+        function setWorkSchedule() {
+            const start = document.getElementById('workStart').value;
+            const end = document.getElementById('workEnd').value;
+            
+            if (start && end) {
+                gameState.workSchedule = { start, end };
+                saveGameState();
+                updateUI();
+                checkWorkMode();
+            }
+        }
+
+        function clearWorkSchedule() {
+            gameState.workSchedule = null;
+            document.getElementById('workStart').value = '';
+            document.getElementById('workEnd').value = '';
+            saveGameState();
+            updateUI();
+        }
+
+        // Check if currently in work mode
+        function checkWorkMode() {
+            if (!gameState.workSchedule) {
+                document.getElementById('workBanner').classList.remove('active');
+                return false;
+            }
+
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            
+            const [startHour, startMin] = gameState.workSchedule.start.split(':').map(Number);
+            const [endHour, endMin] = gameState.workSchedule.end.split(':').map(Number);
+            
+            const startTime = startHour * 60 + startMin;
+            const endTime = endHour * 60 + endMin;
+            
+            const isWorkTime = currentTime >= startTime && currentTime <= endTime;
+            
+            if (isWorkTime) {
+                document.getElementById('workBanner').classList.add('active');
+            } else {
+                document.getElementById('workBanner').classList.remove('active');
+            }
+            
+            return isWorkTime;
+        }
+
+        // Complete quest (can only be completed once per day, cannot be uncompleted)
+        function completeQuest(questId, quest) {
+            // Prevent toggling - once completed, it stays completed for the day
+            if (gameState.completedQuests.includes(questId)) {
+                return; // Already completed, do nothing
+            }
+            
+            // Complete the quest
+            gameState.completedQuests.push(questId);
+            gameState.xp += quest.xp;
+            
+            // Add stats
+            quest.stats.forEach(stat => {
+                gameState.stats[stat] += 2;
+            });
+            
+            // Update completion date and streak
+            const today = new Date().toDateString();
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (gameState.lastCompletionDate === yesterday.toDateString()) {
+                gameState.streak += 1;
+            } else if (gameState.lastCompletionDate !== today) {
+                gameState.streak = 1;
+            }
+            
+            gameState.lastCompletionDate = today;
+            
+            // Check level up
+            while (gameState.xp >= gameState.xpToNextLevel) {
+                levelUp();
+            }
+            
+            saveGameState();
+            updateUI();
+        }
+
+        // Level up
+        function levelUp() {
+            gameState.xp -= gameState.xpToNextLevel;
+            gameState.level += 1;
+            gameState.xpToNextLevel = Math.floor(gameState.xpToNextLevel * 1.5);
+            
+            // Boost all stats
+            Object.keys(gameState.stats).forEach(stat => {
+                gameState.stats[stat] += 5;
+            });
+            
+            showLevelUpNotification();
+        }
+
+        function showLevelUpNotification() {
+            const notification = document.createElement('div');
+            notification.className = 'level-up-notification';
+            notification.innerHTML = `
+                <h2>LEVEL UP!</h2>
+                <p style="font-size: 1.5rem; color: var(--text-secondary);">You've reached Level ${gameState.level}</p>
+                <p style="margin-top: 1rem; color: var(--accent-primary);">All stats increased!</p>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Render quests
+        function renderQuests() {
+            const container = document.getElementById('questsContainer');
+            container.innerHTML = '';
+            
+            const isWorkTime = checkWorkMode();
+            
+            questCategories.forEach(category => {
+                const completed = category.quests.filter(q => 
+                    gameState.completedQuests.includes(q.id)
+                ).length;
+                
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'quest-category';
+                categoryDiv.innerHTML = `
+                    <div class="category-header">
+                        <span class="category-icon">${category.icon}</span>
+                        <h2 class="category-title">${category.name}</h2>
+                        <span class="category-progress">${completed}/${category.quests.length}</span>
+                    </div>
+                `;
+                
+                category.quests.forEach(quest => {
+                    const isCompleted = gameState.completedQuests.includes(quest.id);
+                    const isBlocked = isWorkTime && quest.workBlocked;
+                    
+                    const questDiv = document.createElement('div');
+                    questDiv.className = `quest-item ${isCompleted ? 'completed' : ''} ${isBlocked ? 'disabled-quest' : ''}`;
+                    questDiv.innerHTML = `
+                        <div class="quest-checkbox"></div>
+                        <div class="quest-content">
+                            <div class="quest-name">${quest.name}</div>
+                            <div class="quest-time">${quest.time}${isBlocked ? ' - Blocked during work' : ''}</div>
+                        </div>
+                        <div class="quest-xp">+${quest.xp} XP</div>
+                    `;
+                    
+                    if (!isBlocked) {
+                        questDiv.onclick = () => completeQuest(quest.id, quest);
+                    }
+                    
+                    categoryDiv.appendChild(questDiv);
+                });
+                
+                container.appendChild(categoryDiv);
+            });
+        }
+
+        // Update UI
+        function updateUI() {
+            // Level and XP
+            document.getElementById('playerLevel').textContent = gameState.level;
+            document.getElementById('xpText').textContent = `${gameState.xp} / ${gameState.xpToNextLevel}`;
+            const xpPercent = (gameState.xp / gameState.xpToNextLevel) * 100;
+            document.getElementById('xpFill').style.width = `${xpPercent}%`;
+            
+            // Stats
+            ['strength', 'vitality', 'intelligence', 'balance'].forEach(stat => {
+                const value = gameState.stats[stat];
+                document.getElementById(`${stat}Value`).textContent = value;
+                document.getElementById(`${stat}Bar`).style.width = `${Math.min(value, 100)}%`;
+            });
+            
+            // Streak
+            document.getElementById('streakNumber').textContent = gameState.streak;
+            
+            // Daily summary
+            document.getElementById('completedToday').textContent = gameState.completedQuests.length;
+            const totalXp = gameState.completedQuests.reduce((sum, id) => {
+                const quest = questCategories.flatMap(c => c.quests).find(q => q.id === id);
+                return sum + (quest ? quest.xp : 0);
+            }, 0);
+            document.getElementById('totalXpToday').textContent = totalXp;
+            
+            // Work schedule inputs
+            if (gameState.workSchedule) {
+                document.getElementById('workStart').value = gameState.workSchedule.start;
+                document.getElementById('workEnd').value = gameState.workSchedule.end;
+            }
+            
+            // Notification button
+            const notifBtn = document.getElementById('enableNotifications');
+            if (gameState.notificationsEnabled || Notification.permission === 'granted') {
+                notifBtn.textContent = '✅ Quest Reminders Enabled';
+                notifBtn.disabled = true;
+                notifBtn.style.opacity = '0.6';
+                notifBtn.style.cursor = 'default';
+            }
+            
+            renderQuests();
+        }
+
+        // Initialize
+        loadGameState();
+        
+        // Check work mode every minute
+        setInterval(checkWorkMode, 60000);
+        
+        // Check for quest notifications every minute
+        setInterval(checkQuestNotifications, 60000);
+        
+        // Also check immediately
+        checkQuestNotifications();
+    </script>
+</body>
+</html>
